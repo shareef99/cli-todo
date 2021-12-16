@@ -1,0 +1,16 @@
+{
+  "name": "cli-todo",
+  "version": "1.0.0",
+  "description": "A CLI todo app for linux users",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli-todo",
+    "todo",
+    "linux-todo"
+  ],
+  "author": "Nadeem Shareef",
+  "license": "ISC"
+}
