@@ -30,30 +30,39 @@ Commands:
     todo help: Displays the help menu`);
         return;
     }
-    if (command === "ls") {
-        let client;
-        async function listHandler() {
-            try {
-                client = await MongoClient.connect(uri);
-            } catch (err) {
-                console.log(`Couldn't connect to database`, err);
-            }
-        }
 
-        listHandler().then(() => {
+    let client;
+
+    async function connectToDb() {
+        try {
+            client = await MongoClient.connect(uri);
+        } catch (err) {
+            console.log(`Couldn't connect to database`, err);
+        }
+    }
+
+    if (command === "ls") {
+        connectToDb().then(() => {
             const db = client.db("cli-todo");
             db.collection("todos")
                 .find({})
                 .toArray()
                 .then((docs) => {
-                    console.log(docs);
+                    const todos = docs;
+                    let pendingTodos = todos.filter((todo) => !todo.completed);
+                    let completedTodos = todos.filter((todo) => todo.completed);
+                    console.log("List of your tasks");
+                    console.log(`pending tasks ${pendingTodos.length} `);
+                    pendingTodos.forEach((todo, index) => {
+                        console.log(`${index + 1}. ${todo.todo}`);
+                    });
+                    console.log(`completed tasks ${completedTodos.length}`);
+                    completedTodos.forEach((todo, index) => {
+                        console.log(`${index + 1}. ${todo.todo}`);
+                    });
                     client.close();
                 });
-            console.log("List of your tasks");
-            console.log("Pending:");
-            console.log("Completed:");
         });
-
         return;
     }
 }
