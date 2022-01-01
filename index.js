@@ -166,29 +166,58 @@ program
         closeDb();
     });
 
-const [command, ...args] = data;
+program
+    .command("list")
+    .alias("ls")
+    .description("List all todos.")
+    .action(async () => {
+        const user = getUserLocally();
+        if (!user) {
+            console.log("Please login first");
+            return;
+        }
+        await connectToDb();
+        const db = await client.db("cli-todo");
+        const todos = db.collection("todos");
+        const todosListObjArray = await todos
+            .find({ user: user.username })
+            .toArray();
+        const todosList = todosListObjArray.map((todo) => {
+            return {
+                todo: todo.todo,
+                isDone: todo.isDone,
+                createdAt: todo.createdAt,
+            };
+        });
 
-if (command === "ls") {
-    connectToDb().then(() => {
-        const db = client.db("cli-todo");
-        db.collection("todos")
-            .find({})
-            .toArray()
-            .then((docs) => {
-                const todos = docs;
-                let pendingTodos = todos.filter((todo) => !todo.completed);
-                let completedTodos = todos.filter((todo) => todo.completed);
-                console.log("List of your tasks");
-                console.log(`pending tasks ${pendingTodos.length} `);
-                pendingTodos.forEach((todo, index) => {
-                    console.log(`${index + 1}. ${todo.todo}`);
-                });
-                console.log(`completed tasks ${completedTodos.length}`);
-                completedTodos.forEach((todo, index) => {
-                    console.log(`${index + 1}. ${todo.todo}`);
-                });
-                client.close();
+        const pendingTodos = todosList
+            .filter((todo) => !todo.isDone)
+            .sort((a, b) => a.createdAt - b.createdAt);
+
+        const completedTodos = todosList
+            .filter((todo) => todo.isDone)
+            .sort((a, b) => b.createdAt - a.createdAt);
+
+        if (pendingTodos.length > 0) {
+            console.log("Pending todos:");
+            pendingTodos.forEach((todo, index) => {
+                console.log(`${index + 1} ${todo.todo}`);
             });
+        } else {
+            console.log("Congrats! You have no pending todos");
+        }
+
+        if (completedTodos.length > 0) {
+            console.log("Completed todos:");
+            completedTodos.forEach((todo, index) => {
+                console.log(`${index + 1} ${todo.todo}`);
+            });
+        } else {
+            console.log("No todo has been completed");
+        }
+
+        closeDb();
+    });
     });
 
 program
