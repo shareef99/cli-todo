@@ -218,6 +218,49 @@ program
 
         closeDb();
     });
+
+program
+    .command("done <index>")
+    .alias("D")
+    .description("Mark a todo as done.")
+    .action(async (index) => {
+        const user = getUserLocally();
+        if (!user) {
+            console.log("Please login first");
+            return;
+        }
+
+        if (index < 1) {
+            console.log("Invalid index");
+            return;
+        }
+
+        await connectToDb();
+        const db = await client.db("cli-todo");
+        const todos = db.collection("todos");
+        const todosListObjArray = await todos
+            .find({ user: user.username })
+            .toArray();
+
+        const pendingTodos = todosListObjArray
+            .filter((todo) => !todo.isDone)
+            .sort((a, b) => a.createdAt - b.createdAt);
+
+        if (index > pendingTodos.length) {
+            console.log("Invalid index");
+            return;
+        }
+
+        const todoToBeMarkedAsDone = pendingTodos[index - 1];
+
+        await todos.updateOne(
+            { _id: todoToBeMarkedAsDone._id },
+            { $set: { isDone: true } }
+        );
+
+        console.log(`${todoToBeMarkedAsDone.todo} marked as done`);
+
+        closeDb();
     });
 
 program
