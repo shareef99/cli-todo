@@ -42,6 +42,7 @@ function getUserLocally() {
 
 program
     .command("login")
+    .alias("--l")
     .description("Login with username and password.")
     .action(async () => {
         const question = {
@@ -141,7 +142,29 @@ program
         });
     });
 
-const [, , ...data] = process.argv;
+program
+    .command("add <todo>")
+    .alias("+")
+    .description("Add a new todo.")
+    .action(async (todo) => {
+        const user = getUserLocally();
+        if (!user) {
+            console.log("Please login first");
+            return;
+        }
+        await connectToDb();
+        const db = await client.db("cli-todo");
+        const todos = db.collection("todos");
+        const newTodo = {
+            todo,
+            user: user.username,
+            isDone: false,
+            createdAt: new Date(),
+        };
+        await todos.insertOne(newTodo);
+        console.log(`${todo} added`);
+        closeDb();
+    });
 
 const [command, ...args] = data;
 
