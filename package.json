@@ -18,6 +18,7 @@
     "author": "Nadeem Shareef",
     "license": "ISC",
     "dependencies": {
+        "commander": "^8.3.0",
         "mongodb": "^4.2.2"
     }
 }
