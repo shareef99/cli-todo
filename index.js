@@ -190,38 +190,86 @@ if (command === "ls") {
                 client.close();
             });
     });
-}
 
-if (command === "add") {
-    connectToDb().then(() => {
-        const [todo] = args;
-        const db = client.db("cli-todo");
-        db.collection("todos")
-            .insertOne({ todo, completed: false })
-            .then(() => {
-                console.log(`Added ${todo} to your list of tasks`);
-                client.close();
-            });
-    });
-}
+program
+    .command("delete <from> <index>")
+    .alias("del")
+    .description("Delete a todo.")
+    .action(async (from, index) => {
+        const user = getUserLocally();
+        if (!user) {
+            console.log("Please login first");
+            return;
+        }
 
-if (command === "del") {
-    connectToDb().then(() => {
-        const [index] = args;
-        const db = client.db("cli-todo");
-        db.collection("todos")
-            .findOneAndDelete({ _id: index })
-            .then((result) => {
-                if (result.value) {
-                    console.log(
-                        `Deleted ${result.value.todo} from your list of tasks`
-                    );
-                } else {
-                    console.log(`Couldn't find task with id ${index}`);
-                }
-                client.close();
-            });
+        if (index < 1) {
+            console.log("Invalid index");
+            return;
+        }
+
+        await connectToDb();
+        const db = await client.db("cli-todo");
+        const todos = db.collection("todos");
+        const todosListObjArray = await todos
+            .find({ user: user.username })
+            .toArray();
+
+        const validPendingFrom = [
+            "PENDING",
+            "pending",
+            "P",
+            "p",
+            "--PENDING",
+            "--pending",
+            "--p",
+            "--P",
+        ];
+        const validCompletedFrom = [
+            "COMPLETED",
+            "completed",
+            "C",
+            "c",
+            "--COMPLETED",
+            "--completed",
+            "--c",
+            "--C",
+        ];
+
+        if (validPendingFrom.includes(from)) {
+            const pendingTodos = todosListObjArray
+                .filter((todo) => !todo.isDone)
+                .sort((a, b) => a.createdAt - b.createdAt);
+
+            if (index > pendingTodos.length) {
+                console.log("Invalid index");
+                return;
+            }
+
+            const todoToBeDeleted = pendingTodos[index - 1];
+
+            await todos.deleteOne({ _id: todoToBeDeleted._id });
+
+            console.log(`${todoToBeDeleted.todo} deleted`);
+        } else if (validCompletedFrom.includes(from)) {
+            const completedTodos = todosListObjArray
+                .filter((todo) => todo.isDone)
+                .sort((a, b) => b.createdAt - a.createdAt);
+
+            if (index > completedTodos.length) {
+                console.log("Invalid index");
+                return;
+            }
+
+            const todoToBeDeleted = completedTodos[index - 1];
+
+            await todos.deleteOne({ _id: todoToBeDeleted._id });
+
+            console.log(`${todoToBeDeleted.todo} deleted`);
+        } else {
+            console.log("Invalid command");
+        }
+
+        closeDb();
     });
-}
 
 program.parse(process.argv);
