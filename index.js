@@ -40,6 +40,11 @@ function getUserLocally() {
     return JSON.parse(readFileSync(userPath));
 }
 
+function removeUserLocally() {
+    const userPath = path.join(process.cwd(), "user.json");
+    writeFileSync(userPath, "");
+}
+
 program
     .command("login")
     .alias("--l")
@@ -286,26 +291,8 @@ program
             .find({ user: user.username })
             .toArray();
 
-        const validPendingFrom = [
-            "PENDING",
-            "pending",
-            "P",
-            "p",
-            "--PENDING",
-            "--pending",
-            "--p",
-            "--P",
-        ];
-        const validCompletedFrom = [
-            "COMPLETED",
-            "completed",
-            "C",
-            "c",
-            "--COMPLETED",
-            "--completed",
-            "--c",
-            "--C",
-        ];
+        const validPendingFrom = ["PENDING", "pending", "P", "p"];
+        const validCompletedFrom = ["COMPLETED", "completed", "C", "c"];
 
         if (validPendingFrom.includes(from)) {
             const pendingTodos = todosListObjArray
@@ -342,6 +329,15 @@ program
         }
 
         closeDb();
+    });
+
+program
+    .command("logout")
+    .alias("lo")
+    .description("Logout")
+    .action(() => {
+        removeUserLocally();
+        console.log("Logged out");
     });
 
 program.parse(process.argv);
