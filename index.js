@@ -4,6 +4,7 @@ const { program } = require("commander");
 const { prompt } = require("inquirer");
 const { writeFileSync, readFileSync } = require("fs");
 const path = require("path");
+const os = require("os");
 
 program.version("0.0.1");
 
@@ -31,17 +32,22 @@ async function closeDb() {
 }
 
 function setUserLocally(user) {
-    const userPath = path.join(process.cwd(), "user.json");
+    const userPath = path.join(os.homedir(), "user.json");
     writeFileSync(userPath, JSON.stringify(user));
 }
 
 function getUserLocally() {
-    const userPath = path.join(process.cwd(), "user.json");
-    return JSON.parse(readFileSync(userPath));
+    let user;
+    try {
+        user = JSON.parse(readFileSync(path.join(os.homedir(), "user.json")));
+    } catch (err) {
+        user = null;
+    }
+    return user;
 }
 
 function removeUserLocally() {
-    const userPath = path.join(process.cwd(), "user.json");
+    const userPath = path.join(os.homedir(), "user.json");
     writeFileSync(userPath, "");
 }
 
@@ -338,6 +344,19 @@ program
     .action(() => {
         removeUserLocally();
         console.log("Logged out");
+    });
+
+program
+    .command("check-login")
+    .alias("cl")
+    .description("Check if user is logged in")
+    .action(() => {
+        const user = getUserLocally();
+        if (!user) {
+            console.log("You are not logged in");
+            return;
+        }
+        console.log(`Logged in as ${user.username}`);
     });
 
 program.parse(process.argv);
