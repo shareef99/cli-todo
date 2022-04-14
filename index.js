@@ -3,10 +3,7 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const { prompt } = require("inquirer");
-
-import { writeFileSync } from "fs";
 import { program } from "commander";
-import chalkAnimation from "chalk-animation";
 import chalk from "chalk";
 import {
   filePath,
