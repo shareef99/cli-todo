@@ -29,6 +29,17 @@ export const addTasks = (tasks) => {
   writeFileSync(filePath, JSON.stringify(tasks));
 };
 
+export const displayAllTasks = () => {
+  const tasks = getTasks();
+  tasks.forEach((task, index) => {
+    console.log(
+      `${chalk.green(index + 1)} ${chalk.blue(task.task)} ${chalk.red(
+        task.completed ? "✔" : "✘"
+      )}`
+    );
+  });
+};
+
 export const displayPendingTasks = () => {
   console.log(chalk.yellow.underline("\nPending tasks"));
   const tasks = getPendingTasks();
@@ -50,5 +61,15 @@ export const displayCompletedTasks = () => {
     tasks.forEach((task, index) => {
       console.log(`${index + 1} - ${task.task}`);
     });
+  }
+};
+
+export const getTasksByType = (type) => {
+  if (type === "P") {
+    return getPendingTasks();
+  } else if (type === "C") {
+    return getCompletedTasks();
+  } else if (type === "A") {
+    return getTasks();
   }
 };

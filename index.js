@@ -15,6 +15,8 @@ import {
   displayPendingTasks,
   displayCompletedTasks,
   getPendingTasks,
+  getTasksByType,
+  displayAllTasks,
 } from "./helpers.js";
 
 program
@@ -79,6 +81,8 @@ program
         displayPendingTasks();
       } else if (filter.toUpperCase() === "C") {
         displayCompletedTasks();
+      } else {
+        console.log(chalk.red("Invalid filter option"));
       }
     });
   });
@@ -115,19 +119,62 @@ program
   });
 
 program
-  .command("delete <taskId>")
+  .command("delete")
   .alias("del")
   .description("Delete a task")
-  .action((taskId) => {
-    const tasks = getTasks();
-    const task = tasks[taskId - 1];
-    if (!task) {
-      console.log("Task not found");
-      return;
-    }
-    tasks.splice(taskId - 1, 1);
-    writeFileSync(filePath, JSON.stringify(tasks));
-    console.log(`${task.task} deleted`);
+  .action(() => {
+    let taskType;
+    prompt({
+      type: "input",
+      name: "filter",
+      message: `${chalk.magenta(
+        "Filter by(Pending tasks(P), Completed(C) and All tasks(A)):-"
+      )}`,
+    }).then((answers) => {
+      let { filter } = answers;
+      if (filter.toUpperCase() === "A") {
+        taskType = "A";
+        console.log(chalk.bold.blue("All tasks:-"));
+        displayAllTasks();
+      } else if (filter.toUpperCase() === "P") {
+        taskType = "P";
+        displayPendingTasks();
+      } else if (filter.toUpperCase() === "C") {
+        taskType = "C";
+        displayCompletedTasks();
+      } else {
+        console.log(chalk.red("\nPlease enter proper filter value."));
+        return;
+      }
+
+      prompt({
+        type: "input",
+        name: "index",
+        message: `${chalk.magenta(
+          "Enter the index of the task to be deleted:-"
+        )}`,
+      }).then((answers) => {
+        const { index } = answers;
+        const numberOfTasks = getTasksByType(taskType).length;
+        if (+index < 0 || +index > numberOfTasks || isNaN(index)) {
+          console.log(chalk.red("\nPlease enter proper index value."));
+        } else {
+          let tasks = getTasksByType(taskType);
+          const newTasks = tasks.filter(
+            (task) => task.id !== tasks[index - 1].id
+          );
+          if (taskType === "A") {
+            addTasks(newTasks);
+          } else if (taskType === "P") {
+            const completedTasks = getTasksByType("C");
+            addTasks(completedTasks.concat(newTasks));
+          } else if (taskType === "C") {
+            const pendingTasks = getTasksByType("P");
+            addTasks(pendingTasks.concat(newTasks));
+          }
+        }
+      });
+    });
   });
 
 program.parse(process.args);
