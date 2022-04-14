@@ -1,0 +1,24 @@
+{
+  "name": "task-tracker-shareef",
+  "version": "1.0.0",
+  "description": "A cli task tracker tool",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "task": "node ./index.js"
+  },
+  "scripts": {
+    "task": "node ."
+  },
+  "keywords": [
+    "task-tracker"
+  ],
+  "author": "Nadeem Shareef",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.0.1",
+    "chalk-animation": "^1.6.0",
+    "commander": "^9.1.0",
+    "inquirer": "^8.2.2"
+  }
+}
